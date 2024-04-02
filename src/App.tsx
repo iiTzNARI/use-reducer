@@ -30,7 +30,6 @@ function App() {
   const url = 'https://fakestoreapi.com/products';
 
   const onClickAdd = (itemNumber: number) => {
-    console.log(itemNumber);
     const targetItem: Item = allItems[itemNumber];
     const result = cartItem.some((item) => item.id === itemNumber);
     if (result) {
@@ -66,11 +65,9 @@ function App() {
       const response = await fetch(url);
       const data = await response.json();
       setAllItems(data);
-      console.log(data);
     };
     fetchData();
-    console.log(cartItem);
-  }, [cartItem]);
+  }, []);
   return (
     <>
       <div className="container flex m-5">
