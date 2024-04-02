@@ -1,65 +1,54 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useReducer, useState } from 'react';
 import './App.css';
-
-type Rating = {
-  count: number;
-  rate: number;
-};
-
-type Item = {
-  category: string;
-  description: string;
-  id: number;
-  image: string;
-  price: number;
-  rating: Rating;
-  title: string;
-};
-
-type CartItem = {
-  id: number;
-  image: string;
-  price: number;
-  title: string;
-  number: number;
-};
+import { Action, CartItem, Item } from './Types';
 
 function App() {
   const [allItems, setAllItems] = useState<Item[]>([]);
-  const [cartItem, setCartItem] = useState<CartItem[]>([]);
+
+  const reducer = (state: CartItem[], action: Action): CartItem[] => {
+    switch (action.type) {
+      case 'ADD': {
+        const targetItem: Item = allItems[action.targetNumber];
+        const result = state.some((item) => item.id === targetItem.id);
+        if (result) {
+          const newCartItems: CartItem[] = [...state];
+          const updateIndex = newCartItems.findIndex(
+            (item) => item.id === targetItem.id
+          );
+          newCartItems[updateIndex].number++;
+          return newCartItems;
+        } else {
+          return [
+            ...state,
+            {
+              id: targetItem.id,
+              image: targetItem.image,
+              price: targetItem.price,
+              title: targetItem.title,
+              number: 1,
+            },
+          ];
+        }
+      }
+      case 'REMOVE': {
+        const newCartItems: CartItem[] = [...state];
+        newCartItems[action.targetNumber].number--;
+        if (newCartItems[action.targetNumber].number < 1) {
+          newCartItems.splice(action.targetNumber, 1);
+        }
+        return newCartItems;
+      }
+
+      case 'RESET':
+        return [];
+      default:
+        throw new Error('Error!!!!!');
+    }
+  };
+
+  const [cartItems, dispatch] = useReducer(reducer, []);
   const url = 'https://fakestoreapi.com/products';
 
-  const onClickAdd = (itemNumber: number) => {
-    const targetItem: Item = allItems[itemNumber];
-    const result = cartItem.some((item) => item.id === itemNumber);
-    if (result) {
-      const newCartItems: CartItem[] = [...cartItem];
-      const updateIndex = newCartItems.findIndex(
-        (item) => item.id === itemNumber
-      );
-      newCartItems[updateIndex].number++;
-      setCartItem(newCartItems);
-    } else {
-      setCartItem((prev) => [
-        ...prev,
-        {
-          id: itemNumber,
-          image: targetItem.image,
-          price: targetItem.price,
-          title: targetItem.title,
-          number: 1,
-        },
-      ]);
-    }
-  };
-  const onClickRemove = (targetIndex: number) => {
-    const newCartItems: CartItem[] = [...cartItem];
-    newCartItems[targetIndex].number--;
-    if (newCartItems[targetIndex].number === 0) {
-      newCartItems.splice(targetIndex, 1);
-    }
-    setCartItem(newCartItems);
-  };
   useEffect(() => {
     const fetchData = async () => {
       const response = await fetch(url);
@@ -67,7 +56,9 @@ function App() {
       setAllItems(data);
     };
     fetchData();
-  }, []);
+    console.log(cartItems);
+  }, [cartItems]);
+
   return (
     <>
       <div className="container flex m-5">
@@ -95,7 +86,9 @@ function App() {
                       <button
                         id={String(index)}
                         className="border bg-blue-600 rounded text-white max-w-20 text-lg"
-                        onClick={() => onClickAdd(index)}
+                        onClick={() =>
+                          dispatch({ type: 'ADD', targetNumber: index })
+                        }
                       >
                         Add
                       </button>
@@ -105,9 +98,9 @@ function App() {
               })}
         </ul>
         <ul className="m-5 fixed right-0 items-center border-gray-200rounded-lg shadow w-60">
-          {cartItem.length === 0
+          {cartItems.length === 0
             ? ''
-            : cartItem.map((item, index) => {
+            : cartItems.map((item, index) => {
                 return (
                   <li key={index} className="">
                     <div className="flex flex-row space-x-14">
@@ -116,7 +109,9 @@ function App() {
                       <button
                         className="border bg-blue-600 rounded text-white h-10 p-1 text-lg"
                         id={String(index)}
-                        onClick={() => onClickRemove(index)}
+                        onClick={() =>
+                          dispatch({ type: 'REMOVE', targetNumber: index })
+                        }
                       >
                         remove
                       </button>
@@ -124,6 +119,12 @@ function App() {
                   </li>
                 );
               })}
+          <button
+            className="border bg-blue-600 rounded text-white h-10 p-1 text-lg"
+            onClick={() => dispatch({ type: 'RESET' })}
+          >
+            Reset
+          </button>
         </ul>
       </div>
     </>
