@@ -16,9 +16,43 @@ type Item = {
   title: string;
 };
 
+type CartItem = {
+  id: number;
+  image: string;
+  price: number;
+  title: string;
+  number: number;
+};
+
 function App() {
   const [allItems, setAllItems] = useState<Item[]>([]);
+  const [cartItem, setCartItem] = useState<CartItem[]>([]);
   const url = 'https://fakestoreapi.com/products';
+
+  const onClickAdd = (itemNumber: number) => {
+    console.log(itemNumber);
+    const targetItem: Item = allItems[itemNumber];
+    const result = cartItem.some((item) => item.id === itemNumber);
+    if (result) {
+      const newCartItems: CartItem[] = [...cartItem];
+      const updateIndex = newCartItems.findIndex(
+        (item) => item.id === itemNumber
+      );
+      newCartItems[updateIndex].number++;
+      setCartItem(newCartItems);
+    } else {
+      setCartItem((prev) => [
+        ...prev,
+        {
+          id: itemNumber,
+          image: targetItem.image,
+          price: targetItem.price,
+          title: targetItem.title,
+          number: 1,
+        },
+      ]);
+    }
+  };
   useEffect(() => {
     const fetchData = async () => {
       const response = await fetch(url);
@@ -27,7 +61,7 @@ function App() {
       console.log(data);
     };
     fetchData();
-  }, []);
+  }, [cartItem]);
   return (
     <>
       <div className="container flex m-5">
@@ -52,7 +86,11 @@ function App() {
                       <p className="mb-3 font-normal text-gray-700 dark:text-black">
                         {item.description}
                       </p>
-                      <button className="border bg-blue-600 rounded text-white max-w-20 text-lg">
+                      <button
+                        id={String(index)}
+                        className="border bg-blue-600 rounded text-white max-w-20 text-lg"
+                        onClick={() => onClickAdd(index)}
+                      >
                         Add
                       </button>
                     </div>
@@ -61,11 +99,18 @@ function App() {
               })}
         </ul>
         <ul className="m-5 fixed right-0 items-center border-gray-200rounded-lg shadow w-60">
-          <li>test1</li>
-          <li>test2</li>
-          <li>test3</li>
-          <li>test4</li>
-          <li>test4444444444444444444</li>
+          {cartItem.length === 0
+            ? ''
+            : cartItem.map((item, index) => {
+                return (
+                  <li key={index} className="">
+                    <div className="flex flex-row">
+                      <img src={item.image} className="size-1/6" />
+                      <p>{item.number}</p>
+                    </div>
+                  </li>
+                );
+              })}
         </ul>
       </div>
     </>
