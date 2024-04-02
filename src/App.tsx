@@ -3,24 +3,34 @@ import './App.css';
 import { Action, CartItem, Item } from './Types';
 
 function App() {
+  //  all items from API
   const [allItems, setAllItems] = useState<Item[]>([]);
 
   const reducer = (state: CartItem[], action: Action): CartItem[] => {
     switch (action.type) {
+      //  Add button clicked
       case 'ADD': {
+        //  get the target item
         const targetItem: Item = allItems[action.targetNumber];
+        //  check if same item exist in cart or not
         const result = state.some((item) => item.id === targetItem.id);
+
         if (result) {
+          //  if same item is already exist in cart
           const newCartItems: CartItem[] = [...state];
+          //  get index of item that we need to update
           const updateIndex = newCartItems.findIndex(
             (item) => item.id === targetItem.id
           );
+          //  increment the number of item
           newCartItems[updateIndex].number++;
           return newCartItems;
         } else {
+          //  if same item is not exist in cart
           return [
             ...state,
             {
+              //  new item added to cart
               id: targetItem.id,
               image: targetItem.image,
               price: targetItem.price,
@@ -30,15 +40,18 @@ function App() {
           ];
         }
       }
+      //  Remove button clicked
       case 'REMOVE': {
         const newCartItems: CartItem[] = [...state];
+        //  decrement the number of target item
         newCartItems[action.targetNumber].number--;
+        //  if the number of target item is less than 1, remove it.
         if (newCartItems[action.targetNumber].number < 1) {
           newCartItems.splice(action.targetNumber, 1);
         }
         return newCartItems;
       }
-
+      //  Reset button clicked
       case 'RESET':
         return [];
       default:
@@ -46,9 +59,11 @@ function App() {
     }
   };
 
+  //  for handling cart items
   const [cartItems, dispatch] = useReducer(reducer, []);
   const url = 'https://fakestoreapi.com/products';
 
+  //  fetch fake data
   useEffect(() => {
     const fetchData = async () => {
       const response = await fetch(url);
@@ -56,8 +71,7 @@ function App() {
       setAllItems(data);
     };
     fetchData();
-    console.log(cartItems);
-  }, [cartItems]);
+  }, []);
 
   return (
     <>
