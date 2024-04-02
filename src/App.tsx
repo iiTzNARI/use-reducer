@@ -53,6 +53,14 @@ function App() {
       ]);
     }
   };
+  const onClickRemove = (targetIndex: number) => {
+    const newCartItems: CartItem[] = [...cartItem];
+    newCartItems[targetIndex].number--;
+    if (newCartItems[targetIndex].number === 0) {
+      newCartItems.splice(targetIndex, 1);
+    }
+    setCartItem(newCartItems);
+  };
   useEffect(() => {
     const fetchData = async () => {
       const response = await fetch(url);
@@ -61,6 +69,7 @@ function App() {
       console.log(data);
     };
     fetchData();
+    console.log(cartItem);
   }, [cartItem]);
   return (
     <>
@@ -104,9 +113,16 @@ function App() {
             : cartItem.map((item, index) => {
                 return (
                   <li key={index} className="">
-                    <div className="flex flex-row">
+                    <div className="flex flex-row space-x-14">
                       <img src={item.image} className="size-1/6" />
                       <p>{item.number}</p>
+                      <button
+                        className="border bg-blue-600 rounded text-white h-10 p-1 text-lg"
+                        id={String(index)}
+                        onClick={() => onClickRemove(index)}
+                      >
+                        remove
+                      </button>
                     </div>
                   </li>
                 );
